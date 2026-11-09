@@ -1,0 +1,2 @@
+HOSTING INSTRUCTIONS
+Upload the contents of this folder to an HTTPS static web host (e.g. Netlify Drop or GitHub Pages). Keep all files together. Open the resulting HTTPS URL in Safari on iPhone, tap Share, Add to Home Screen. This app stores meals and diary in browser localStorage only, not in a cloud account; export regular JSON backups. Moving domains or reinstalling may lose local records. No automatic ChatGPT or Health sync.
