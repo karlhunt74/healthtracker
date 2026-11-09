@@ -72,6 +72,35 @@ $('copySummary').addEventListener('click',async()=>{
   try{await navigator.clipboard.writeText(text);notify('Diary copied.');}catch{download('healthtracker-day-'+$('date').value+'.txt',text,'text/plain');notify('Clipboard unavailable. Downloaded your diary as text.');}
 });
 
+// Scan-code preferences are separate from diary data and never enter backups.
+const SCAN_CODE_KEY='healthtracker-scan-code-v1';
+function codePreferenceStatus(message){$('rememberCodeStatus').textContent=message;$('savedCodeStatus').textContent=message;}
+function rememberCode(){
+  if(!$('rememberScanCode').checked)return;
+  const code=$('scanCode').value.trim();
+  try{
+    if(code)localStorage.setItem(SCAN_CODE_KEY,code);else localStorage.removeItem(SCAN_CODE_KEY);
+    codePreferenceStatus(code?'Scan code remembered on this device.':'Enter a scan code to remember it.');
+  }catch{codePreferenceStatus('Could not update the saved code. Your browser may have blocked storage; the previous setting may remain.');}
+}
+function forgetCode(){
+  try{localStorage.removeItem(SCAN_CODE_KEY);$('scanCode').value='';$('rememberScanCode').checked=false;codePreferenceStatus('Scan code forgotten on this device.');}
+  catch{codePreferenceStatus('Could not remove the saved code. Clear this site’s browser data to remove it.');}
+}
+try{
+  const code=localStorage.getItem(SCAN_CODE_KEY);
+  if(code){$('scanCode').value=code;$('rememberScanCode').checked=true;codePreferenceStatus('Scan code remembered on this device.');}
+  else codePreferenceStatus('No scan code saved on this device.');
+}catch{codePreferenceStatus('Remembering the scan code is unavailable in this browser.');}
+$('rememberScanCode').addEventListener('change',()=>{
+  if($('rememberScanCode').checked)rememberCode();
+  else try{localStorage.removeItem(SCAN_CODE_KEY);codePreferenceStatus('The code will only be used for this page session.');}
+  catch{$('rememberScanCode').checked=true;codePreferenceStatus('Could not remove the saved code. Use Forget code or clear this site’s browser data.');}
+});
+$('scanCode').addEventListener('input',rememberCode);
+$('forgetScanCode').addEventListener('click',forgetCode);
+$('forgetScanCodeSettings').addEventListener('click',forgetCode);
+
 // Photos stay in memory and are only transmitted after the explicit Read label action.
 function setScanStatus(message){$('scanStatus').textContent=message;}
 function renderPhotos(){
@@ -97,10 +126,11 @@ $('takePhoto').addEventListener('click',()=>$('camera').click());$('choosePhoto'
 $('camera').addEventListener('change',addPhotos);$('photos').addEventListener('change',addPhotos);
 $('photoList').addEventListener('click',event=>{const button=event.target.closest('[data-photo-remove]');if(button&&!scanning){photos.splice(Number(button.dataset.photoRemove),1);renderPhotos();}});
 $('cancelScan').addEventListener('click',()=>scanController?.abort());
-function scanBusy(value){scanning=value;for(const id of ['scan','takePhoto','choosePhoto','manualMeal','scanCode'])$(id).disabled=value;$('mealForm').inert=value;$('cancelScan').hidden=!value;renderPhotos();}
+function scanBusy(value){scanning=value;for(const id of ['scan','takePhoto','choosePhoto','manualMeal','scanCode','rememberScanCode','forgetScanCode','forgetScanCodeSettings'])$(id).disabled=value;$('mealForm').inert=value;$('cancelScan').hidden=!value;renderPhotos();}
 $('scan').addEventListener('click',async()=>{
   if(scanning||preparing||!photos.length)return;
   const code=$('scanCode').value.trim();if(!code)return setScanStatus('Enter the private scan access code for this app.');
+  rememberCode();
   if(draft&&!await ask('Replace the current unsaved label review with a new scan?'))return;
   scanController=new AbortController();const controller=scanController;
   const timer=setTimeout(()=>controller.abort('timeout'),58_000);scanBusy(true);setScanStatus('Reading your label with AI… This may take up to a minute.');
@@ -191,7 +221,7 @@ $('mealForm').addEventListener('submit',event=>{
     const meal={id:uid(),name,source:$('mealSource').value,type:$('mealType').value,nutrition,label:structuredClone(draft),portion:{columnId:option.columnId,factor:option.factor,count,calculated:option.calculated},portion_description:$('portionDescription').value.trim()||count+' × '+option.label};
     for(const [field,key] of [['cal','energy_kcal'],['p','protein'],['c','carbohydrate'],['f','fat']])meal[field]=macro(nutrition,key);
     if(commit({...state,meals:[...state.meals,meal]})){
-      draft=null;photos=[];renderPhotos();$('mealForm').hidden=true;$('mealForm').reset();$('scanCode').value='';$('filter').value='All';render();showTab('library');notify('Saved '+name+'. You can log it again from your meal library without another scan.');
+      draft=null;photos=[];renderPhotos();$('mealForm').hidden=true;$('mealForm').reset();if(!$('rememberScanCode').checked)$('scanCode').value='';$('filter').value='All';render();showTab('library');notify('Saved '+name+'. You can log it again from your meal library without another scan.');
     }
   }catch(error){notify(error.message);}
 });

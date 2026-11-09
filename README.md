@@ -11,7 +11,7 @@ Meal library and food diary with AI nutrition-label extraction. Plain HTML/CSS/E
 5. Redeploy after changing environment variables. Merely changing them does not update an existing deployment.
 6. Open the existing site address. Close and reopen the installed app or refresh to load the upgrade. Add photos, enter the **scan access code** (the `SCAN_ACCESS_TOKEN`, never the API key), and select **Read label with AI**.
 
-The API key exists only in the serverless runtime. The access code protects the paid scan endpoint and is held only in the current page's form; it is not written to browser storage or backups. Netlify team access protection is preserved. There is an additional platform rate limit of 30 requests per hour per site domain. This is a scan throttle, not a dollar spending cap; OpenAI account billing settings remain separate.
+The API key exists only in the serverless runtime. The access code protects the paid scan endpoint. Tick **Remember on this device** to store the scan code in this browser and automatically fill it on future visits. Leave it unticked to use it only for the current page. **Forget code**, available beside the scan controls and in Settings, removes the saved code and clears the field. Anyone using the same browser profile can use a remembered scan code; choose the option only on a device you trust. The scan code is never included in diary backups. Netlify team access protection is preserved. There is an additional platform rate limit of 30 requests per hour per site domain. This is a scan throttle, not a dollar spending cap; OpenAI account billing settings remain separate.
 
 ## Label and portion behavior
 
